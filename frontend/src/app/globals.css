@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 243 75% 59%;
+    --radius: 0.75rem;
+    --chart-1: 243 75% 59%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 6%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 6%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 243 75% 65%;
+    --primary-foreground: 224 71.4% 4.1%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 243 75% 65%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; }
+  ::selection { @apply bg-indigo-500/30; }
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent;
+  }
+  .gradient-text-sm {
+    @apply bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent;
+  }
+  .gradient-bg {
+    @apply bg-gradient-to-r from-indigo-600 to-violet-600;
+  }
+  .gradient-bg-hover {
+    @apply hover:from-indigo-500 hover:to-violet-500 transition-all duration-300;
+  }
+  .glow-indigo {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+  }
+  .glow-indigo-hover:hover {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+    transition: box-shadow 0.3s ease;
+  }
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+  .mesh-bg {
+    background-image: radial-gradient(at 40% 20%, rgba(99,102,241,0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(139,92,246,0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(99,102,241,0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, rgba(167,139,250,0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(99,102,241,0.1) 0px, transparent 50%);
+  }
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10;
+  }
+  .loader-grid {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.28) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.28) 1px, transparent 1px),
+      linear-gradient(135deg, hsl(var(--primary) / 0.12), transparent 42%, hsl(164 70% 45% / 0.1));
+    background-size: 36px 36px, 36px 36px, 100% 100%;
+    mask-image: radial-gradient(ellipse at center, black 0%, black 45%, transparent 78%);
+  }
+  .route-loader-bar {
+    animation: route-loader-slide 1.15s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  .page-loader-ring {
+    animation: page-loader-spin 0.8s linear infinite;
+  }
+  .page-loader-logo {
+    animation: page-loader-float 1.8s ease-in-out infinite;
+  }
+  .loading-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .loading-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.12), transparent);
+    animation: loading-shimmer 1.4s ease-in-out infinite;
+  }
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200;
+  }
+  .sidebar-item-active {
+    @apply bg-indigo-500/15 text-indigo-400 border border-indigo-500/20;
+  }
+  .sidebar-item-inactive {
+    @apply text-muted-foreground hover:text-foreground hover:bg-white/5;
+  }
+}
+
+@keyframes route-loader-slide {
+  0% { transform: translateX(-110%); }
+  55% { transform: translateX(55%); }
+  100% { transform: translateX(210%); }
+}
+
+@keyframes page-loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes page-loader-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes loading-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/50; }
+
+/* Clerk overrides */
+.cl-rootBox { width: 100%; }
+.cl-card,
+.cl-cardBox {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08) !important;
+}
+.dark .cl-card,
+.dark .cl-cardBox {
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35) !important;
+}
+.cl-headerTitle,
+.cl-formHeaderTitle,
+.cl-userPreviewMainIdentifier {
+  color: hsl(var(--foreground)) !important;
+}
+.cl-headerSubtitle,
+.cl-formHeaderSubtitle,
+.cl-footerActionText,
+.cl-formFieldHintText,
+.cl-identityPreviewText,
+.cl-dividerText {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.cl-socialButtonsBlockButton {
+  border: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  box-shadow: none !important;
+}
+.cl-socialButtonsBlockButton:hover,
+.cl-footerActionLink:hover,
+.cl-formResendCodeLink:hover {
+  opacity: 0.9 !important;
+}
+.cl-formFieldLabel,
+.cl-formFieldAction,
+.cl-identityPreviewEditButton,
+.cl-formResendCodeLink {
+  color: hsl(var(--foreground)) !important;
+}
+.cl-formButtonPrimary {
+  background: linear-gradient(to right, #6366f1, #8b5cf6) !important;
+  box-shadow: none !important;
+  color: white !important;
+}
+.cl-formFieldInput,
+.cl-otpCodeFieldInput {
+  background: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+  box-shadow: none !important;
+}
+.cl-formFieldInput:focus,
+.cl-otpCodeFieldInput:focus {
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18) !important;
+}
+.cl-dividerLine {
+  background: hsl(var(--border)) !important;
+}
+.cl-footer,
+.cl-identityPreview {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+.cl-footerActionLink,
+.cl-formResendCodeLink {
+  color: #818cf8 !important;
+}
+.cl-alert {
+  background: hsl(var(--destructive) / 0.12) !important;
+  border-color: hsl(var(--destructive) / 0.25) !important;
+  color: hsl(var(--foreground)) !important;
+}
