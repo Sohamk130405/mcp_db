@@ -7,7 +7,13 @@ import { isWriteQuery } from "@/services/checkpoint.service.js";
 const mysqlPools = new Map<string, mysql.Pool>();
 const mysqlTransactions = new Map<
   string,
-  { connection: mysql.PoolConnection; sessionId: string; userId: string; connectionId: string; createdAt: Date }
+  {
+    connection: mysql.PoolConnection;
+    sessionId: string;
+    userId: string;
+    connectionId: string;
+    createdAt: Date;
+  }
 >();
 
 export async function getMysqlPool(conn: DbConnection): Promise<mysql.Pool> {
@@ -35,14 +41,18 @@ export async function getMysqlPool(conn: DbConnection): Promise<mysql.Pool> {
     mysqlPools.set(conn.id, pool);
     return pool;
   } catch (error) {
-    throw new Error(`Failed to connect to MySQL: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Failed to connect to MySQL: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
 export function assertMysqlSelectOnly(sql: string): void {
   const normalized = sql.trim().toUpperCase();
   if (!normalized.startsWith("SELECT") && !isWriteQuery(sql)) {
-    throw new Error("Only SELECT, INSERT, UPDATE, and DELETE queries are supported");
+    throw new Error(
+      "Only SELECT, INSERT, UPDATE, and DELETE queries are supported",
+    );
   }
 }
 
@@ -65,7 +75,9 @@ export async function beginMysqlTransaction(
     });
     return transactionId;
   } catch (error) {
-    throw new Error(`Failed to begin MySQL transaction: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Failed to begin MySQL transaction: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -100,10 +112,17 @@ export async function runMysqlTransactionQuery(
   params: unknown[] = [],
 ) {
   try {
-    const connection = getMysqlTransaction(transactionId, sessionId, userId, connectionId);
+    const connection = getMysqlTransaction(
+      transactionId,
+      sessionId,
+      userId,
+      connectionId,
+    );
     return await connection.execute(sql, params);
   } catch (error) {
-    throw new Error(`Failed to run MySQL transaction query: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Failed to run MySQL transaction query: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -114,12 +133,19 @@ export async function commitMysqlTransaction(
   connectionId: string,
 ): Promise<void> {
   const transaction = mysqlTransactions.get(transactionId);
-  const connection = getMysqlTransaction(transactionId, sessionId, userId, connectionId);
+  const connection = getMysqlTransaction(
+    transactionId,
+    sessionId,
+    userId,
+    connectionId,
+  );
 
   try {
     await connection.commit();
   } catch (error) {
-    throw new Error(`Failed to commit MySQL transaction: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Failed to commit MySQL transaction: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   } finally {
     connection.release();
     if (transaction) {
@@ -135,12 +161,19 @@ export async function rollbackMysqlTransaction(
   connectionId: string,
 ): Promise<void> {
   const transaction = mysqlTransactions.get(transactionId);
-  const connection = getMysqlTransaction(transactionId, sessionId, userId, connectionId);
+  const connection = getMysqlTransaction(
+    transactionId,
+    sessionId,
+    userId,
+    connectionId,
+  );
 
   try {
     await connection.rollback();
   } catch (error) {
-    throw new Error(`Failed to roll back MySQL transaction: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Failed to roll back MySQL transaction: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   } finally {
     connection.release();
     if (transaction) {
@@ -149,9 +182,18 @@ export async function rollbackMysqlTransaction(
   }
 }
 
-export function listMysqlTransactions(sessionId: string, userId: string, connectionId?: string) {
+export function listMysqlTransactions(
+  sessionId: string,
+  userId: string,
+  connectionId?: string,
+) {
   return Array.from(mysqlTransactions.entries())
-    .filter(([, tx]) => tx.sessionId === sessionId && tx.userId === userId && (!connectionId || tx.connectionId === connectionId))
+    .filter(
+      ([, tx]) =>
+        tx.sessionId === sessionId &&
+        tx.userId === userId &&
+        (!connectionId || tx.connectionId === connectionId),
+    )
     .map(([id, tx]) => ({
       id,
       connectionId: tx.connectionId,
