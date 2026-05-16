@@ -11,6 +11,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   API_KEY_PREFIX: z.string().min(1).default("mcp_live_"),
   CORS_ORIGIN: z.string().default("*"),
+  MCP_SERVER_URL: z.string().url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -19,5 +20,8 @@ if (!parsed.success) {
   throw new Error(`Invalid environment variables: ${parsed.error.flatten().formErrors.join(", ")}`);
 }
 
-export const env = parsed.data;
+export const env = {
+  ...parsed.data,
+  MCP_SERVER_URL: (parsed.data.MCP_SERVER_URL ?? `http://localhost:${parsed.data.PORT}`).replace(/\/$/, ""),
+};
 export type Env = typeof env;

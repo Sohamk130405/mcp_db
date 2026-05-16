@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { DB_PORTS } from "@/lib/utils";
 import confetti from "canvas-confetti";
 
+const MCP_SERVER = (process.env.NEXT_PUBLIC_MCP_SERVER_URL ?? "http://localhost:3001").replace(/\/$/, "");
+
 // ── Step indicator ────────────────────────────────────────────────────────────
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
@@ -304,9 +306,14 @@ function Step4ChooseMode({ onNext }: { onNext: () => void }) {
   const config = JSON.stringify({
     mcpServers: {
       dbtalk: {
-        command: "npx",
-        args: ["-y", "@dbtalk/mcp-client"],
-        env: { MCP_API_KEY: "paste-your-api-key-here", MCP_SERVER_URL: "https://api.dbtalk.dev" },
+        command: "cmd",
+        args: [
+          "/c",
+          "npx",
+          "-y",
+          "mcp-remote",
+          `${MCP_SERVER}/mcp/sse?key=paste-your-api-key-here`,
+        ],
       },
     },
   }, null, 2);
@@ -348,8 +355,8 @@ function Step4ChooseMode({ onNext }: { onNext: () => void }) {
               <div className="mt-2 rounded-xl border border-border bg-zinc-950/80 p-4">
                 <p className="text-xs text-muted-foreground mb-2">SSE Endpoint</p>
                 <div className="flex items-center gap-2">
-                  <code className="text-xs font-mono text-indigo-400 flex-1">https://api.dbtalk.dev/mcp/sse?key=YOUR_KEY</code>
-                  <CopyButton text="https://api.dbtalk.dev/mcp/sse?key=YOUR_KEY" />
+                  <code className="text-xs font-mono text-indigo-400 flex-1">{`${MCP_SERVER}/mcp/sse?key=YOUR_KEY`}</code>
+                  <CopyButton text={`${MCP_SERVER}/mcp/sse?key=YOUR_KEY`} />
                 </div>
               </div>
             )}

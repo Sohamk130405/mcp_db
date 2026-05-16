@@ -9,7 +9,7 @@ import type { ToolContext } from "@/types/mcp.js";
 
 export const sseSessions = new Map<
   string,
-  { transport: SSEServerTransport; context: ToolContext; server: McpServer }
+  { transport: SSEServerTransport; context: ToolContext; rateLimit: number; server: McpServer }
 >();
 
 export const sseRouter = Router();
@@ -26,6 +26,7 @@ sseRouter.get("/", authMiddleware, rateLimiter, async (req, res, next) => {
     sseSessions.set(transport.sessionId, {
       transport,
       server,
+      rateLimit: req.apiKeyRateLimit ?? 100,
       context: {
         userId: req.userId,
         apiKeyId: req.apiKeyId,

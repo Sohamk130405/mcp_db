@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { env } from "@/config/env.js";
 import { authMiddleware } from "@/middleware/auth.js";
 import { rateLimiter } from "@/middleware/rateLimiter.js";
 
@@ -19,12 +20,14 @@ configRouter.get("/download", async (req, res, next) => {
     res.json({
       mcpServers: {
         "my-databases": {
-          command: "npx",
-          args: ["-y", "@your-org/mcp-database-client"],
-          env: {
-            MCP_API_KEY: "<the user's raw key — prompt them to paste it>",
-            MCP_SERVER_URL: "https://your-domain.com",
-          },
+          command: "cmd",
+          args: [
+            "/c",
+            "npx",
+            "-y",
+            "mcp-remote",
+            `${env.MCP_SERVER_URL}/mcp/sse?key=paste-your-api-key-here`,
+          ],
         },
       },
     });

@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import type { NextFunction, Request, Response } from "express";
 import { Router } from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
@@ -10,7 +11,24 @@ import { toolContextStorage } from "@/types/mcp.js";
 
 export const restRouter = Router();
 
-restRouter.post("/", authMiddleware, rateLimiter, async (req, res, next) => {
+function hydrateSseSessionAuth(req: Request, res: Response, next: NextFunction): void {
+  const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId : undefined;
+  const sseSession = sessionId ? sseSessions.get(sessionId) : undefined;
+
+  if (!sseSession) {
+    void authMiddleware(req, res, next);
+    return;
+  }
+
+  req.userId = sseSession.context.userId;
+  req.apiKeyId = sseSession.context.apiKeyId;
+  req.apiKeyRateLimit = sseSession.rateLimit;
+  req.apiKeyScopes = sseSession.context.apiKeyScopes;
+  req.userConnections = sseSession.context.userConnections;
+  next();
+}
+
+restRouter.post("/", hydrateSseSessionAuth, rateLimiter, async (req, res, next) => {
   try {
     if (!req.userId || !req.apiKeyId || !req.userConnections) {
       res.status(401).json({ error: "Unauthorized" });

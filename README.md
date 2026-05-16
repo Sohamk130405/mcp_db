@@ -76,6 +76,7 @@ PORT=3001
 NODE_ENV=development
 API_KEY_PREFIX=mcp_live_
 CORS_ORIGIN=http://localhost:3000
+MCP_SERVER_URL=http://localhost:3001
 ```
 
 Generate an encryption key with:
@@ -169,6 +170,7 @@ npm start
 
 - Deploy `frontend` and `mcp-server` as separate services.
 - Set `MCP_SERVER_URL` and `NEXT_PUBLIC_MCP_SERVER_URL` in the frontend to the public MCP server URL.
+- Set `MCP_SERVER_URL` in `mcp-server` to the same public MCP server URL so downloaded Claude configs use the hosted URL instead of localhost.
 - Set `CORS_ORIGIN` in `mcp-server` to the public frontend URL.
 - Use a managed PostgreSQL database for `DATABASE_URL`.
 - Use a managed Redis service for production rate limiting when available.
