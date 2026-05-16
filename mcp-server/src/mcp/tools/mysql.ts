@@ -49,7 +49,10 @@ function markMysqlPendingHumanDecision(transactionId: string) {
   });
 }
 
-function assertMysqlHumanDecisionReady(transactionId: string, action: "commit" | "rollback") {
+function assertMysqlHumanDecisionReady(
+  transactionId: string,
+  action: "commit" | "rollback",
+) {
   const pending = mysqlPendingHumanDecisions.get(transactionId);
 
   if (!pending) {
@@ -75,7 +78,12 @@ export function registerMysqlTools(server: McpServerLike): void {
     },
     async (args) => {
       const startedAt = Date.now();
-      const parsed = z.object({ connectionId: z.string().uuid(), reason: z.string().nullable().optional() }).parse(args);
+      const parsed = z
+        .object({
+          connectionId: z.string().uuid(),
+          reason: z.string().nullable().optional(),
+        })
+        .parse(args);
       const { context, connection } = getMysqlConnection(parsed.connectionId);
 
       try {
@@ -83,8 +91,18 @@ export function registerMysqlTools(server: McpServerLike): void {
           throw new Error("This API key does not have write scope");
         }
 
-        const transactionId = await beginMysqlTransaction(connection, context.sessionId, context.userId);
-        await logToolCall(context.userId, "mysql_begin_transaction", true, Date.now() - startedAt, context.apiKeyId);
+        const transactionId = await beginMysqlTransaction(
+          connection,
+          context.sessionId,
+          context.userId,
+        );
+        await logToolCall(
+          context.userId,
+          "mysql_begin_transaction",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
         return createJsonToolResult({
           transactionId,
           connectionId: connection.id,
@@ -114,12 +132,24 @@ export function registerMysqlTools(server: McpServerLike): void {
     },
     async (args) => {
       const startedAt = Date.now();
-      const parsed = z.object({ connectionId: z.string().uuid().optional() }).parse(args);
+      const parsed = z
+        .object({ connectionId: z.string().uuid().optional() })
+        .parse(args);
       const context = getToolContext();
 
       try {
-        const transactions = listMysqlTransactions(context.sessionId, context.userId, parsed.connectionId);
-        await logToolCall(context.userId, "mysql_list_transactions", true, Date.now() - startedAt, context.apiKeyId);
+        const transactions = listMysqlTransactions(
+          context.sessionId,
+          context.userId,
+          parsed.connectionId,
+        );
+        await logToolCall(
+          context.userId,
+          "mysql_list_transactions",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
         return createJsonToolResult({ transactions });
       } catch (error) {
         await logToolCall(
@@ -152,7 +182,13 @@ export function registerMysqlTools(server: McpServerLike): void {
             databaseName: item.databaseName,
           }));
 
-        await logToolCall(context.userId, "mysql_list_connections", true, Date.now() - startedAt, context.apiKeyId);
+        await logToolCall(
+          context.userId,
+          "mysql_list_connections",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
         return createJsonToolResult({ connections });
       } catch (error) {
         await logToolCall(
@@ -183,8 +219,16 @@ export function registerMysqlTools(server: McpServerLike): void {
         const pool = await getMysqlPool(connection);
         const [rows] = await pool.query("SHOW TABLES");
 
-        await logToolCall(context.userId, "mysql_tables", true, Date.now() - startedAt, context.apiKeyId);
-        return createJsonToolResult({ tables: Array.isArray(rows) ? rows : [] });
+        await logToolCall(
+          context.userId,
+          "mysql_tables",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
+        return createJsonToolResult({
+          tables: Array.isArray(rows) ? rows : [],
+        });
       } catch (error) {
         await logToolCall(
           context.userId,
@@ -220,8 +264,16 @@ export function registerMysqlTools(server: McpServerLike): void {
         const pool = await getMysqlPool(connection);
         const [rows] = await pool.query("DESCRIBE ??", [parsed.tableName]);
 
-        await logToolCall(context.userId, "mysql_describe_table", true, Date.now() - startedAt, context.apiKeyId);
-        return createJsonToolResult({ columns: Array.isArray(rows) ? rows : [] });
+        await logToolCall(
+          context.userId,
+          "mysql_describe_table",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
+        return createJsonToolResult({
+          columns: Array.isArray(rows) ? rows : [],
+        });
       } catch (error) {
         await logToolCall(
           context.userId,
@@ -272,29 +324,40 @@ export function registerMysqlTools(server: McpServerLike): void {
           }
 
           if (!parsed.confirmWrite) {
-            throw new Error("Write queries require explicit user confirmation via confirmWrite=true");
+            throw new Error(
+              "Write queries require explicit user confirmation via confirmWrite=true",
+            );
           }
 
           if (!parsed.transactionId) {
-            throw new Error("Write queries require an active transactionId from mysql_begin_transaction");
+            throw new Error(
+              "Write queries require an active transactionId from mysql_begin_transaction",
+            );
           }
         }
 
-        const [rows] = isWrite && parsed.transactionId
-          ? await runMysqlTransactionQuery(
-              parsed.transactionId,
-              context.sessionId,
-              context.userId,
-              connection.id,
-              parsed.sql,
-              parsed.params ?? [],
-            )
-          : await pool.execute(parsed.sql, parsed.params ?? []);
+        const [rows] =
+          isWrite && parsed.transactionId
+            ? await runMysqlTransactionQuery(
+                parsed.transactionId,
+                context.sessionId,
+                context.userId,
+                connection.id,
+                parsed.sql,
+                parsed.params ?? [],
+              )
+            : await pool.execute(parsed.sql, parsed.params ?? []);
         if (isWrite && parsed.transactionId) {
           markMysqlPendingHumanDecision(parsed.transactionId);
         }
 
-        await logToolCall(context.userId, "mysql_query", true, Date.now() - startedAt, context.apiKeyId);
+        await logToolCall(
+          context.userId,
+          "mysql_query",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
         return createJsonToolResult({
           rows: Array.isArray(rows) ? rows : [],
           transactionId: parsed.transactionId ?? null,
@@ -332,23 +395,41 @@ export function registerMysqlTools(server: McpServerLike): void {
     },
     async (args) => {
       const startedAt = Date.now();
-      const parsed = z.object({
-        connectionId: z.string().uuid(),
-        transactionId: z.string().uuid(),
-        confirmCommit: z.boolean(),
-      }).parse(args);
+      const parsed = z
+        .object({
+          connectionId: z.string().uuid(),
+          transactionId: z.string().uuid(),
+          confirmCommit: z.boolean(),
+        })
+        .parse(args);
       const { context, connection } = getMysqlConnection(parsed.connectionId);
 
       try {
         if (!parsed.confirmCommit) {
-          throw new Error("Commit requires explicit user confirmation via confirmCommit=true");
+          throw new Error(
+            "Commit requires explicit user confirmation via confirmCommit=true",
+          );
         }
 
         assertMysqlHumanDecisionReady(parsed.transactionId, "commit");
-        await commitMysqlTransaction(parsed.transactionId, context.sessionId, context.userId, connection.id);
+        await commitMysqlTransaction(
+          parsed.transactionId,
+          context.sessionId,
+          context.userId,
+          connection.id,
+        );
         mysqlPendingHumanDecisions.delete(parsed.transactionId);
-        await logToolCall(context.userId, "mysql_commit_transaction", true, Date.now() - startedAt, context.apiKeyId);
-        return createJsonToolResult({ committed: true, transactionId: parsed.transactionId });
+        await logToolCall(
+          context.userId,
+          "mysql_commit_transaction",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
+        return createJsonToolResult({
+          committed: true,
+          transactionId: parsed.transactionId,
+        });
       } catch (error) {
         await logToolCall(
           context.userId,
@@ -373,23 +454,41 @@ export function registerMysqlTools(server: McpServerLike): void {
     },
     async (args) => {
       const startedAt = Date.now();
-      const parsed = z.object({
-        connectionId: z.string().uuid(),
-        transactionId: z.string().uuid(),
-        confirmRollback: z.boolean(),
-      }).parse(args);
+      const parsed = z
+        .object({
+          connectionId: z.string().uuid(),
+          transactionId: z.string().uuid(),
+          confirmRollback: z.boolean(),
+        })
+        .parse(args);
       const { context, connection } = getMysqlConnection(parsed.connectionId);
 
       try {
         if (!parsed.confirmRollback) {
-          throw new Error("Rollback requires explicit user confirmation via confirmRollback=true");
+          throw new Error(
+            "Rollback requires explicit user confirmation via confirmRollback=true",
+          );
         }
 
         assertMysqlHumanDecisionReady(parsed.transactionId, "rollback");
-        await rollbackMysqlTransaction(parsed.transactionId, context.sessionId, context.userId, connection.id);
+        await rollbackMysqlTransaction(
+          parsed.transactionId,
+          context.sessionId,
+          context.userId,
+          connection.id,
+        );
         mysqlPendingHumanDecisions.delete(parsed.transactionId);
-        await logToolCall(context.userId, "mysql_rollback_transaction", true, Date.now() - startedAt, context.apiKeyId);
-        return createJsonToolResult({ rolledBack: true, transactionId: parsed.transactionId });
+        await logToolCall(
+          context.userId,
+          "mysql_rollback_transaction",
+          true,
+          Date.now() - startedAt,
+          context.apiKeyId,
+        );
+        return createJsonToolResult({
+          rolledBack: true,
+          transactionId: parsed.transactionId,
+        });
       } catch (error) {
         await logToolCall(
           context.userId,

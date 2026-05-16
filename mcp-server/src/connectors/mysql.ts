@@ -23,7 +23,7 @@ export async function getMysqlPool(conn: DbConnection): Promise<mysql.Pool> {
       database: conn.databaseName,
       user: conn.credentials.username,
       password: conn.credentials.password,
-      ssl: conn.sslEnabled ? {} : undefined,
+      ssl: conn.sslEnabled ? { rejectUnauthorized: false } : undefined,
       waitForConnections: true,
       connectionLimit: 10,
       maxIdle: 10,
