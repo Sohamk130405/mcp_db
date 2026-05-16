@@ -17,11 +17,18 @@ import {
   Wrench,
   Loader2,
   AlertCircle,
+  ShieldCheck,
+  PencilLine,
 } from "lucide-react";
 import {
   Button,
   Textarea,
   ScrollArea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -52,6 +59,26 @@ type ChatStreamEvent =
       output: unknown;
     }
   | { type: "error"; message: string };
+
+type ChatMode = "read" | "write";
+
+const CHAT_MODES: Record<
+  ChatMode,
+  { label: string; shortLabel: string; description: string; icon: typeof ShieldCheck }
+> = {
+  read: {
+    label: "Read only",
+    shortLabel: "Read",
+    description: "SELECT and schema inspection",
+    icon: ShieldCheck,
+  },
+  write: {
+    label: "Read + Write",
+    shortLabel: "Write",
+    description: "Allows mutations with confirmation",
+    icon: PencilLine,
+  },
+};
 
 
 
@@ -418,6 +445,7 @@ export function ChatInterface({ connections }: { connections: Connection[] }) {
   } = useChatStore();
 
   const [input, setInput] = useState("");
+  const [chatMode, setChatMode] = useState<ChatMode>("read");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -477,10 +505,12 @@ export function ChatInterface({ connections }: { connections: Connection[] }) {
             role: m.role,
             content: m.content,
           })),
+          conversationId: convId,
           connectionId: selectedConn.id,
           dbType: selectedConn.dbType,
           dbName: selectedConn.databaseName,
           host: selectedConn.host,
+          mode: chatMode,
         }),
       });
 
@@ -572,6 +602,7 @@ export function ChatInterface({ connections }: { connections: Connection[] }) {
     setActiveConversation,
     setIsStreaming,
     updateLastMessage,
+    chatMode,
   ]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -616,8 +647,8 @@ export function ChatInterface({ connections }: { connections: Connection[] }) {
       {/* Main chat area */}
       <div className="flex-1 flex flex-col bg-background overflow-hidden">
         {/* Chat top bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/80 backdrop-blur-sm shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-sm shrink-0 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <span className="text-sm font-medium text-muted-foreground">
               Querying:
             </span>
@@ -658,10 +689,52 @@ export function ChatInterface({ connections }: { connections: Connection[] }) {
               </DropdownMenu>
             )}
           </div>
-          <div className="lg:hidden">
-            <Button onClick={handleNewChat} variant="ghost" size="icon">
-              <Plus className="w-4 h-4" />
-            </Button>
+          <div className="flex items-center gap-2 sm:justify-end">
+            <Select
+              value={chatMode}
+              onValueChange={(value) => setChatMode(value as ChatMode)}
+              disabled={isStreaming}
+            >
+              <SelectTrigger
+                className="h-9 w-[160px] rounded-lg"
+                aria-label="Chat mode"
+              >
+                <SelectValue>
+                  <span className="flex items-center gap-2">
+                    {(() => {
+                      const ModeIcon = CHAT_MODES[chatMode].icon;
+                      return <ModeIcon className="h-4 w-4 text-indigo-400" />;
+                    })()}
+                    <span>{CHAT_MODES[chatMode].label}</span>
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end" className="w-[220px]">
+                {(Object.entries(CHAT_MODES) as [ChatMode, (typeof CHAT_MODES)[ChatMode]][]).map(
+                  ([mode, config]) => {
+                    const ModeIcon = config.icon;
+                    return (
+                      <SelectItem key={mode} value={mode} className="py-2">
+                        <span className="flex items-start gap-2">
+                          <ModeIcon className="mt-0.5 h-4 w-4 text-indigo-400" />
+                          <span className="flex flex-col">
+                            <span className="font-medium">{config.label}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {config.description}
+                            </span>
+                          </span>
+                        </span>
+                      </SelectItem>
+                    );
+                  },
+                )}
+              </SelectContent>
+            </Select>
+            <div className="lg:hidden">
+              <Button onClick={handleNewChat} variant="ghost" size="icon">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 

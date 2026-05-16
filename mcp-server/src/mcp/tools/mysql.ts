@@ -23,6 +23,13 @@ type McpServerLike = {
   ) => void;
 };
 
+type PendingHumanDecision = {
+  earliestResolutionAt: number;
+};
+
+const mysqlPendingHumanDecisions = new Map<string, PendingHumanDecision>();
+const HUMAN_DECISION_PAUSE_MS = 1500;
+
 function getMysqlConnection(connectionId: string) {
   const context = getToolContext();
   const connection = context.userConnections.find(
@@ -36,17 +43,39 @@ function getMysqlConnection(connectionId: string) {
   return { context, connection };
 }
 
+function markMysqlPendingHumanDecision(transactionId: string) {
+  mysqlPendingHumanDecisions.set(transactionId, {
+    earliestResolutionAt: Date.now() + HUMAN_DECISION_PAUSE_MS,
+  });
+}
+
+function assertMysqlHumanDecisionReady(transactionId: string, action: "commit" | "rollback") {
+  const pending = mysqlPendingHumanDecisions.get(transactionId);
+
+  if (!pending) {
+    throw new Error(
+      `Cannot ${action}: this transaction has no pending reviewed write. Run the write in a transaction, show the result to the user, then ask them to reply commit or rollback.`,
+    );
+  }
+
+  if (Date.now() < pending.earliestResolutionAt) {
+    throw new Error(
+      `Cannot ${action} yet. Wait for the user's explicit next-message approval before resolving this transaction.`,
+    );
+  }
+}
+
 export function registerMysqlTools(server: McpServerLike): void {
   server.tool(
     "mysql_begin_transaction",
-    "Starts a MySQL transaction for safe write operations within the current chat session.",
+    "Starts a MySQL transaction for safe write operations. After running writes, summarize the changes and wait for the user's next message before committing or rolling back.",
     {
       connectionId: z.string().uuid(),
-      reason: z.string().optional(),
+      reason: z.string().nullable().optional(),
     },
     async (args) => {
       const startedAt = Date.now();
-      const parsed = z.object({ connectionId: z.string().uuid(), reason: z.string().optional() }).parse(args);
+      const parsed = z.object({ connectionId: z.string().uuid(), reason: z.string().nullable().optional() }).parse(args);
       const { context, connection } = getMysqlConnection(parsed.connectionId);
 
       try {
@@ -60,7 +89,8 @@ export function registerMysqlTools(server: McpServerLike): void {
           transactionId,
           connectionId: connection.id,
           reason: parsed.reason ?? null,
-          guidance: "Use this transactionId for write queries, then commit or rollback in the same chat session.",
+          guidance:
+            "Use this transactionId for the requested write queries only. After writes, show the result to the user and ask them to reply commit or rollback. Do not commit in the same assistant turn.",
         });
       } catch (error) {
         await logToolCall(
@@ -208,14 +238,14 @@ export function registerMysqlTools(server: McpServerLike): void {
 
   server.tool(
     "mysql_query",
-    "Runs a MySQL query. Write queries require write scope, explicit confirmation, and an active transaction.",
+    "Runs a MySQL query. Write queries require write scope, explicit user confirmation, and an active transaction. After a successful write, report the result and wait for the user's next message before commit or rollback.",
     {
       connectionId: z.string().uuid(),
       sql: z.string().min(1),
-      params: z.array(z.unknown()).optional(),
-      confirmWrite: z.boolean().optional(),
-      confirmationNote: z.string().optional(),
-      transactionId: z.string().uuid().optional(),
+      params: z.array(z.unknown()).nullable().optional(),
+      confirmWrite: z.boolean().nullable().optional(),
+      confirmationNote: z.string().nullable().optional(),
+      transactionId: z.string().uuid().nullable().optional(),
     },
     async (args) => {
       const startedAt = Date.now();
@@ -223,10 +253,10 @@ export function registerMysqlTools(server: McpServerLike): void {
         .object({
           connectionId: z.string().uuid(),
           sql: z.string().min(1),
-          params: z.array(z.unknown()).optional(),
-          confirmWrite: z.boolean().optional(),
-          confirmationNote: z.string().optional(),
-          transactionId: z.string().uuid().optional(),
+          params: z.array(z.unknown()).nullable().optional(),
+          confirmWrite: z.boolean().nullable().optional(),
+          confirmationNote: z.string().nullable().optional(),
+          transactionId: z.string().uuid().nullable().optional(),
         })
         .parse(args);
       const { context, connection } = getMysqlConnection(parsed.connectionId);
@@ -260,12 +290,23 @@ export function registerMysqlTools(server: McpServerLike): void {
               parsed.params ?? [],
             )
           : await pool.execute(parsed.sql, parsed.params ?? []);
+        if (isWrite && parsed.transactionId) {
+          markMysqlPendingHumanDecision(parsed.transactionId);
+        }
 
         await logToolCall(context.userId, "mysql_query", true, Date.now() - startedAt, context.apiKeyId);
         return createJsonToolResult({
           rows: Array.isArray(rows) ? rows : [],
           transactionId: parsed.transactionId ?? null,
           confirmationNote: parsed.confirmationNote ?? null,
+          pendingHumanDecision:
+            isWrite && parsed.transactionId
+              ? {
+                  required: true,
+                  instruction:
+                    "Stop now. Summarize these uncommitted changes and ask the user to reply commit or rollback. Do not call mysql_commit_transaction or mysql_rollback_transaction until the user answers.",
+                }
+              : null,
         });
       } catch (error) {
         await logToolCall(
@@ -283,7 +324,7 @@ export function registerMysqlTools(server: McpServerLike): void {
 
   server.tool(
     "mysql_commit_transaction",
-    "Commits an active MySQL transaction from the current chat session.",
+    "Commits an active MySQL transaction only after the user has reviewed the uncommitted write result and explicitly replied to commit in a later message.",
     {
       connectionId: z.string().uuid(),
       transactionId: z.string().uuid(),
@@ -303,7 +344,9 @@ export function registerMysqlTools(server: McpServerLike): void {
           throw new Error("Commit requires explicit user confirmation via confirmCommit=true");
         }
 
+        assertMysqlHumanDecisionReady(parsed.transactionId, "commit");
         await commitMysqlTransaction(parsed.transactionId, context.sessionId, context.userId, connection.id);
+        mysqlPendingHumanDecisions.delete(parsed.transactionId);
         await logToolCall(context.userId, "mysql_commit_transaction", true, Date.now() - startedAt, context.apiKeyId);
         return createJsonToolResult({ committed: true, transactionId: parsed.transactionId });
       } catch (error) {
@@ -322,7 +365,7 @@ export function registerMysqlTools(server: McpServerLike): void {
 
   server.tool(
     "mysql_rollback_transaction",
-    "Rolls back an active MySQL transaction from the current chat session.",
+    "Rolls back an active MySQL transaction after the user reviews the uncommitted write result and explicitly chooses rollback.",
     {
       connectionId: z.string().uuid(),
       transactionId: z.string().uuid(),
@@ -342,7 +385,9 @@ export function registerMysqlTools(server: McpServerLike): void {
           throw new Error("Rollback requires explicit user confirmation via confirmRollback=true");
         }
 
+        assertMysqlHumanDecisionReady(parsed.transactionId, "rollback");
         await rollbackMysqlTransaction(parsed.transactionId, context.sessionId, context.userId, connection.id);
+        mysqlPendingHumanDecisions.delete(parsed.transactionId);
         await logToolCall(context.userId, "mysql_rollback_transaction", true, Date.now() - startedAt, context.apiKeyId);
         return createJsonToolResult({ rolledBack: true, transactionId: parsed.transactionId });
       } catch (error) {
