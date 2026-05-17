@@ -14,6 +14,7 @@ The repository contains two deployable apps:
 - Secure credential encryption with AES-256-GCM.
 - Clerk authentication and onboarding flow.
 - Scoped API keys with read/write permissions and rate limits.
+- MCP tools for MongoDB reads plus single and bulk insert/update/delete operations.
 - Audit logging for database tool calls.
 - Claude Desktop config download for MCP integration.
 - Dashboard pages for connections, API keys, chat, analytics, and settings.
@@ -23,6 +24,7 @@ The repository contains two deployable apps:
 - Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS, Clerk, Drizzle ORM, Neon/PostgreSQL, Groq.
 - MCP server: Node.js, Express, TypeScript, Drizzle ORM, PostgreSQL, Redis-compatible rate limiting, MCP SDK.
 - Databases supported through MCP: PostgreSQL, MySQL, MongoDB.
+- MongoDB MCP tools: connection discovery, collection discovery, find, count, aggregate, insert one/many, update one/many, and delete one/many.
 
 ## Project Structure
 

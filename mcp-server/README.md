@@ -5,8 +5,8 @@ A specialized Model Context Protocol (MCP) server that provides AI agents with s
 ## 🚀 Overview
 
 This server acts as a gateway between Large Language Models (LLMs) and your database infrastructure. It not only provides tools for querying and managing data but also enforces strict security protocols, including:
-- **Write-Safety**: Mandatory user confirmation for destructive operations.
-- **Transactional Integrity**: Support for chat-scoped transactions.
+- **Write-Safety**: Mandatory user confirmation for write and destructive operations.
+- **Transactional Integrity**: Support for chat-scoped SQL transactions.
 - **Audit Logging**: Every tool call is logged for compliance and security.
 - **Multi-Database Support**: Single interface for different database types.
 
@@ -60,7 +60,13 @@ npm run dev
 - **API Keys**: All requests must include a valid `Authorization: Bearer <key>` header.
 - **Scopes**: Keys can have `read` or `write` scopes.
 - **Encryption**: Database credentials stored in the platform DB are encrypted using AES-256-GCM.
-- **Confirmation**: Write operations require the `confirmWrite: true` parameter and an active transaction.
+- **Confirmation**: Write operations require `confirmWrite: true`. PostgreSQL/MySQL writes also require an active transaction; MongoDB write tools require write scope and confirmation, with non-empty filters for multi-document update/delete.
+
+## MCP Tool Coverage
+
+- **PostgreSQL**: connection discovery, table discovery, table description, read queries, and transaction-gated writes.
+- **MySQL**: connection discovery, table discovery, table description, read queries, and transaction-gated writes.
+- **MongoDB**: connection discovery, collection discovery, `find`, `count`, `aggregate`, `insert_one`, `insert_many`, `update_one`, `update_many`, `delete_one`, and `delete_many`.
 
 ## 📄 Documentation
 For detailed technical documentation, including architecture and API specifications, see [SYSTEM_DOCS.md](./SYSTEM_DOCS.md).

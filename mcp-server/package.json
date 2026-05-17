@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsup src/index.ts --format cjs --dts",
     "start": "node dist/index.cjs",
+    "eval:score": "node evaluation/scorer.mjs",
     "setup:claude-test": "tsx src/scripts/setupClaudeDesktopTest.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

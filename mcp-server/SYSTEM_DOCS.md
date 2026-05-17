@@ -51,6 +51,8 @@ For any `mysql_query` or `postgres_query` that modifies data:
 3.  The LLM *must* then call `mysql_query` with `confirmWrite: true` and the `transactionId`.
 4.  The server validates the `write` scope of the API key before proceeding.
 
+For MongoDB write tools, the server validates the `write` scope and requires `confirmWrite: true`. Multi-document update and delete tools require a non-empty filter so agents cannot accidentally modify or delete an entire collection with `{}`.
+
 ---
 
 ## 🛠️ MCP Tools Reference
@@ -63,9 +65,13 @@ For any `mysql_query` or `postgres_query` that modifies data:
 - `*_begin_transaction`, `*_commit_transaction`, `*_rollback_transaction`: Lifecycle management for write operations.
 
 ### MongoDB Tools
-- `mongodb_list_collections`: Lists collections in a database.
-- `mongodb_find`: Standard query tool.
-- `mongodb_insert_one`, `mongodb_update_one`, `mongodb_delete_one`: Single document operations with mandatory confirmation.
+- `mongo_list_connections`: Returns IDs and labels of registered MongoDB connections.
+- `mongo_collections`: Lists collections in a database.
+- `mongo_find`: Runs a find query with optional filter, projection, sort, and limit.
+- `mongo_count`: Counts documents matching an optional filter.
+- `mongo_aggregate`: Runs an aggregation pipeline.
+- `mongo_insert_one`, `mongo_update_one`, `mongo_delete_one`: Single-document write operations with mandatory confirmation.
+- `mongo_insert_many`, `mongo_update_many`, `mongo_delete_many`: Multi-document write operations with mandatory confirmation. Bulk inserts accept 1-1000 documents per call; bulk update/delete require non-empty filters.
 
 ---
 
