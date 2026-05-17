@@ -39,7 +39,3 @@ Thumbs.db
 # Local temp files
 tmp/
 temp/
-
-
-# Tests
-evaluation/

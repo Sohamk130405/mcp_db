@@ -1,0 +1,129 @@
+{
+  "generatedAt": "2026-05-17T06:17:32.011Z",
+  "totalCases": 21,
+  "completedCases": 21,
+  "completionRate": 100,
+  "toolSelectionAccuracy": 100,
+  "argumentAccuracy": 100,
+  "sqlKeywordAccuracy": 100,
+  "taskSuccessRate": 100,
+  "toolExecutionSuccessRate": 100,
+  "averageLatencyMs": 840,
+  "failuresByType": {},
+  "categoryBreakdown": [
+    {
+      "category": "postgresql_connection_discovery",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "postgresql_schema_discovery",
+      "cases": 2,
+      "passed": 2,
+      "successRate": 100
+    },
+    {
+      "category": "postgresql_query",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "postgresql_write_safety",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mysql_connection_discovery",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mysql_schema_discovery",
+      "cases": 2,
+      "passed": 2,
+      "successRate": 100
+    },
+    {
+      "category": "mysql_query",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mysql_write_safety",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_connection_discovery",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_schema_discovery",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_find",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_count",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_aggregation",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_write_insert_one",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_write_insert_many",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_write_update_one",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_write_update_many",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_write_delete_one",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    },
+    {
+      "category": "mongodb_write_delete_many",
+      "cases": 1,
+      "passed": 1,
+      "successRate": 100
+    }
+  ]
+}
